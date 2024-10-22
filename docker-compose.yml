@@ -1,0 +1,55 @@
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8055:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - app-network
+    depends_on:
+      - php
+
+  php:
+    build:
+      context: .
+      dockerfile: php-dockerfile
+    volumes:
+      - ./src:/var/www/html
+    environment:
+      - PHP_ERROR_REPORTING=E_ALL
+    networks:
+      - app-network
+    expose:
+      - 9000
+    depends_on:
+      - postgres
+      - mysql
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - ./mysqldata:/var/lib/mysql
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
